@@ -1,0 +1,19 @@
+---
+// 从环境变量中获取 Google Analytics ID
+const gaId = import.meta.env.PUBLIC_GA_ID
+
+// 如果没有配置 GA ID，则不渲染任何内容
+---
+
+{gaId && (
+  <>
+    <!-- Google tag (gtag.js) -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+    <script is:inline define:vars={{ gaId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', gaId);
+    </script>
+  </>
+)}

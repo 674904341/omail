@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tmail-postgres
+    environment:
+      POSTGRES_DB: tmail
+      POSTGRES_PASSWORD: postgres  # 修改为强密码
+      POSTGRES_USER: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tmail-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Umami 数据库
+  umami-db:
+    image: mysql:8.0-alpine
+    container_name: tmail-umami-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: umami
+      MYSQL_USER: umami
+      MYSQL_PASSWORD: umami_password
+    volumes:
+      - umami_data:/var/lib/mysql
+    networks:
+      - tmail-network
+
+  # Umami 统计服务
+  umami:
+    image: ghcr.io/umami-software/umami:mysql-latest
+    container_name: tmail-umami
+    depends_on:
+      - umami-db
+    environment:
+      DATABASE_URL: mysql://umami:umami_password@umami-db:3306/umami
+      DATABASE_TYPE: mysql
+      HASH_SALT: your-secret-hash-salt
+    ports:
+      - "3001:3000"
+    networks:
+      - tmail-network
+
+  # Tmail 服务（本地构建，包含 GA_ID）
+  tmail:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Umami 配置
+        UMAMI_ID: your-umami-website-id
+        UMAMI_URL: http://umami:3000/script.js
+        UMAMI_DOMAINS: mail.example.com,example.org
+        # Google Analytics 配置
+        PUBLIC_GA_ID: G-XXXXXXXXXX
+    container_name: tmail
+    depends_on:
+      postgres:
+        condition: service_healthy
+      umami:
+        condition: service_started
+    environment:
+      # 数据库配置
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: tmail
+      DB_DRIVER: postgres
+
+      # 服务配置
+      HOST: 0.0.0.0
+      PORT: 3000
+
+      # 域名列表（必须）
+      DOMAIN_LIST: mail.example.com,example.org
+
+      # 管理员邮箱（可选）
+      ADMIN_ADDRESS: admin@example.com
+
+    ports:
+      - "3000:3000"
+    networks:
+      - tmail-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  umami_data:
+
+networks:
+  tmail-network:
+    driver: bridge
