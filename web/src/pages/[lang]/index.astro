@@ -1,6 +1,7 @@
 ---
 import Actions from "@/components/Actions"
 import Content from "@/components/Content"
+import Login from "@/components/Login"
 import Header from "@/components/Header.astro"
 import { languages } from "@/i18n/ui"
 import Layout from "@/layouts/Layout.astro"
@@ -18,7 +19,12 @@ const { lang } = Astro.params
 
 <Layout lang={lang}>
   <Header lang={lang} />
-  <div class="mx-auto flex min-h-0 w-11/12 max-w-4xl flex-1 gap-4">
+  <div id="app-container">
+    <!-- Login will be shown by default, then JavaScript checks auth -->
+    <Login client:load />
+  </div>
+  
+  <div id="mailbox-container" style="display: none;" class="mx-auto flex min-h-0 w-11/12 max-w-4xl flex-1 gap-4">
     <div class="hidden sm:block">
       <Actions
         lang={lang}
@@ -28,4 +34,21 @@ const { lang } = Astro.params
     </div>
     <Content lang={lang} client:load />
   </div>
+
+  <script>
+    // Check if user is logged in
+    const token = localStorage.getItem("api_token")
+    const appContainer = document.getElementById("app-container")
+    const mailboxContainer = document.getElementById("mailbox-container")
+
+    if (token) {
+      // User is logged in, show mailbox
+      if (appContainer) appContainer.style.display = "none"
+      if (mailboxContainer) mailboxContainer.style.display = "flex"
+    } else {
+      // User is not logged in, show login
+      if (appContainer) appContainer.style.display = "block"
+      if (mailboxContainer) mailboxContainer.style.display = "none"
+    }
+  </script>
 </Layout>

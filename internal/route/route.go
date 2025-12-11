@@ -12,7 +12,7 @@ func Register(e *echo.Echo) {
 	// Public auth routes
 	authG := e.Group("/api/auth")
 	authG.GET("/url", api.Wrap(api.GetAuthURL))
-	authG.POST("/login", api.Wrap(api.Login))
+	authG.GET("/login", api.Wrap(api.Login))  // Changed from POST to GET for GitHub callback
 	
 	// Protected API routes (require API token)
 	apiG := e.Group("/api")
