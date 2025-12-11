@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  tmail:
+    container_name: omail
+    image: ohoimager/omail:develop
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      # 数据库配置
+      - DB_HOST=DB_HOST
+      - DB_PORT=DB_PORT
+      - DB_NAME=tmail
+      - DB_USER=DB_USER
+      - DB_PASS=DB_PASS
+      - DB_DRIVER=postgres
+      
+      # 服务配置
+      - HOST=0.0.0.0
+      - PORT=3000
+      - DOMAIN_LIST=
+      - TZ=Asia/Shanghai
+      - ADMIN_ADDRESS=
+      
+      # GitHub OAuth 配置（✅ 关键修复）
+      - GITHUB_OAUTH_ID=
+      - GITHUB_OAUTH_SECRET=
+      - GITHUB_OAUTH_REDIRECT=https://xxxxxxx.xxxx/zh/callback
+      
+      # 分析工具配置
+      - UMAMI_ID=
+      - UMAMI_URL=
+      - UMAMI_DOMAINS=
+      - PUBLIC_GA_ID=
+      
+    volumes:
+      - ./tmail:/app/fs
+
+# 说明：
+# 1. 环境变量使用 KEY=VALUE 格式（不是 KEY: VALUE）
+# 2. GITHUB_OAUTH_REDIRECT 应该是回调页面 URL：
+#    - 开发环境：http://localhost:3000/en/callback
+#    - 生产环境：https://mail.4w.ink/en/callback
+# 3. 确保 GitHub App 中的 Authorization callback URL 与此一致

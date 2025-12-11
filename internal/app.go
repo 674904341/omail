@@ -38,6 +38,16 @@ func (app App) Run() error {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
+	// 日志：显示关键配置（用于诊断）
+	log.Info().
+		Str("host", cfg.Host).
+		Str("port", cfg.Port).
+		Str("domain_list", cfg.DomainList).
+		Str("github_id_set", fmt.Sprintf("%v", len(os.Getenv("GITHUB_OAUTH_ID")) > 0)).
+		Str("github_secret_set", fmt.Sprintf("%v", len(os.Getenv("GITHUB_OAUTH_SECRET")) > 0)).
+		Str("github_redirect", os.Getenv("GITHUB_OAUTH_REDIRECT")).
+		Msg("Application config loaded")
+
 	client, err := ent.New(cfg.DB)
 	if err != nil {
 		return err
