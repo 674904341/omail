@@ -49,6 +49,7 @@ func (app App) Run() error {
 	e := echo.New()
 	e.Pre(i18n)
 	e.Use(api.Middleware(client, cfg))
+	e.Use(route.APITokenAuthMiddleware(client))
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
 		DisablePrintStack: true,
 	}))
