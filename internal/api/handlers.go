@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"tmail/ent"
+	"tmail/ent/mailbox"
 )
 
 // LoginRequest handles GitHub OAuth callback
 func Login(c *Context) error {
 	code := c.QueryParam("code")
-	state := c.QueryParam("state")
 	
 	if code == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "missing code"})
@@ -30,13 +30,13 @@ func Login(c *Context) error {
 	}
 	
 	// Create or update user
-	user, err := authService.CreateOrUpdateUser(c.Context(), ghUser)
+	user, err := authService.CreateOrUpdateUser(c.Request().Context(), ghUser)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to create user"})
 	}
 	
 	// Generate API token
-	token, err := authService.GenerateAPIToken(c.Context(), user.ID, "default")
+	token, err := authService.GenerateAPIToken(c.Request().Context(), user.ID, "default")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to generate token"})
 	}
@@ -92,9 +92,9 @@ func CreateMailbox(c *Context) error {
 	
 	// Create mailbox
 	mailbox, err := c.Client().Mailbox.Create().
+		SetUser(user).
 		SetEmail(email).
-		SetUserID(user.ID).
-		Save(c.Context())
+		Save(c.Request().Context())
 	
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to create mailbox"})
@@ -113,7 +113,8 @@ func GetMailboxes(c *Context) error {
 		return c.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 	}
 	
-	mailboxes, err := c.Client().Mailbox.Query().Where().All(c.Context())
+	// Query mailboxes for this user
+	mailboxes, err := user.QueryMailboxes().All(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to fetch mailboxes"})
 	}
@@ -145,17 +146,21 @@ func GetEmails(c *Context) error {
 	
 	// Verify mailbox belongs to user
 	mailbox, err := c.Client().Mailbox.Query().
-		Where().
-		First(c.Context())
+		Where(mailbox.Email(email)).
+		First(c.Request().Context())
 	
-	if err != nil || mailbox.UserID != user.ID {
+	if err != nil {
+		return c.JSON(http.StatusForbidden, map[string]string{"error": "access denied"})
+	}
+	
+	// Verify user owns this mailbox
+	mbUser, err := mailbox.QueryUser().Only(c.Request().Context())
+	if err != nil || mbUser.ID != user.ID {
 		return c.JSON(http.StatusForbidden, map[string]string{"error": "access denied"})
 	}
 	
 	// Get envelopes for this mailbox
-	envelopes, err := c.Client().Envelope.Query().
-		Where().
-		All(c.Context())
+	envelopes, err := mailbox.QueryEnvelopes().All(c.Request().Context())
 	
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to fetch emails"})
@@ -185,13 +190,13 @@ func GetEmailDetail(c *Context) error {
 	
 	emailID := c.Param("id")
 	
-	envelope, err := c.Client().Envelope.Get(c.Context(), parseID(emailID))
+	envelope, err := c.Client().Envelope.Get(c.Request().Context(), parseID(emailID))
 	if err != nil {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "email not found"})
 	}
 	
 	// Verify access - you may need to add more verification logic
-	attachments, _ := envelope.QueryAttachments().All(c.Context())
+	attachments, _ := envelope.QueryAttachments().All(c.Request().Context())
 	
 	var attachmentList []map[string]interface{}
 	for _, att := range attachments {
