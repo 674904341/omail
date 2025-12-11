@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: tmail-dev-postgres
+    environment:
+      POSTGRES_DB: tmail
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - tmail-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Tmail 后端服务（本地构建）
+  tmail:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tmail-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # 数据库配置
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: tmail
+      DB_DRIVER: postgres
+
+      # 服务配置
+      HOST: 0.0.0.0
+      PORT: 3000
+
+      # 域名列表（开发环境）
+      DOMAIN_LIST: mail.4w.ink,localhost
+
+      # GitHub OAuth 配置（填入你的凭证）
+      GITHUB_OAUTH_ID: ${GITHUB_OAUTH_ID:-your_client_id}
+      GITHUB_OAUTH_SECRET: ${GITHUB_OAUTH_SECRET:-your_client_secret}
+      GITHUB_OAUTH_REDIRECT: ${GITHUB_OAUTH_REDIRECT:-http://localhost:3000}
+
+    ports:
+      - "3000:3000"
+    networks:
+      - tmail-dev-network
+    restart: unless-stopped
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  tmail-dev-network:
+    driver: bridge

@@ -13,8 +13,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
     server: {
       proxy: {
-        "/api": "https://mail.4w.ink",
-        // "/api": "http://127.0.0.1:3000",
+        "/api": "http://localhost:3000",
       },
     },
   },
