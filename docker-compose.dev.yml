@@ -23,10 +23,8 @@ services:
 
   # Tmail 后端服务（本地构建）
   tmail:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: tmail-dev
+    container_name: tmail-dev-builder
+    image: ohoimager/omail:develop-7fa448b
     depends_on:
       postgres:
         condition: service_healthy

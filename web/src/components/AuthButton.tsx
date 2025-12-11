@@ -9,10 +9,11 @@ interface AuthButtonProps {
 export default function AuthButton({ lang }: AuthButtonProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState("")
+  const [avatar, setAvatar] = useState("")
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    // 检查是否已登录
+  // 检查登录状态的函数
+  const checkLoginStatus = () => {
     const token = localStorage.getItem("api_token")
     const user = localStorage.getItem("user")
 
@@ -21,26 +22,25 @@ export default function AuthButton({ lang }: AuthButtonProps) {
       try {
         const userData = JSON.parse(user)
         setUsername(userData.username || "User")
+        setAvatar(userData.avatar || "")
       } catch {
         setUsername("User")
+        setAvatar("")
       }
+    } else {
+      setIsLoggedIn(false)
+      setUsername("")
+      setAvatar("")
     }
+  }
+
+  useEffect(() => {
+    // 初始化时检查登录状态
+    checkLoginStatus()
 
     // 监听 storage 变化（其他标签页登录时）
     const handleStorageChange = () => {
-      const newToken = localStorage.getItem("api_token")
-      if (newToken && newToken !== token) {
-        setIsLoggedIn(true)
-        const newUser = localStorage.getItem("user")
-        if (newUser) {
-          try {
-            const userData = JSON.parse(newUser)
-            setUsername(userData.username || "User")
-          } catch {
-            setUsername("User")
-          }
-        }
-      }
+      checkLoginStatus()
     }
 
     window.addEventListener("storage", handleStorageChange)
@@ -75,6 +75,13 @@ export default function AuthButton({ lang }: AuthButtonProps) {
   if (isLoggedIn) {
     return (
       <div className="flex items-center gap-2">
+        {avatar && (
+          <img
+            src={avatar}
+            alt={username}
+            className="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600"
+          />
+        )}
         <span className="text-sm text-gray-600 dark:text-gray-400">
           {username}
         </span>
