@@ -100,7 +100,7 @@ export default function AuthButton({ lang }: AuthButtonProps) {
     >
       <LogIn className="h-4 w-4" />
       <span className="hidden sm:inline">
-        {loading ? "Loading..." : "API Token"}
+        {loading ? "Loading..." : "登录"}
       </span>
     </Button>
   )
