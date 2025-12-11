@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"tmail/ent"
 	"tmail/ent/mailbox"
 )
 
@@ -203,7 +202,7 @@ func GetEmailDetail(c *Context) error {
 		attachmentList = append(attachmentList, map[string]interface{}{
 			"id":       att.ID,
 			"filename": att.Filename,
-			"size":     att.Size,
+			"content_type": att.ContentType,
 		})
 	}
 	

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"strings"
 	"tmail/ent"
 	"tmail/ent/apitoken"
