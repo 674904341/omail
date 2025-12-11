@@ -42,7 +42,7 @@ func (app App) Run() error {
 	log.Info().
 		Str("host", cfg.Host).
 		Str("port", cfg.Port).
-		Str("domain_list", cfg.DomainList).
+		Str("domain_list", strings.Join(cfg.DomainList, ",")).
 		Str("github_id_set", fmt.Sprintf("%v", len(os.Getenv("GITHUB_OAUTH_ID")) > 0)).
 		Str("github_secret_set", fmt.Sprintf("%v", len(os.Getenv("GITHUB_OAUTH_SECRET")) > 0)).
 		Str("github_redirect", os.Getenv("GITHUB_OAUTH_REDIRECT")).
