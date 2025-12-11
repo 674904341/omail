@@ -1,0 +1,50 @@
+---
+import Layout from "@/layouts/Layout.astro"
+import { languages } from "@/i18n/ui"
+
+export function getStaticPaths() {
+  return languages.map((l) => ({
+    params: {
+      lang: l,
+    },
+  }))
+}
+
+const { lang } = Astro.params
+---
+
+<Layout lang={lang}>
+  <div class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+      <h1 class="text-2xl font-bold mb-4">处理登录中...</h1>
+      <p class="text-gray-600">请稍候，正在跳转...</p>
+    </div>
+  </div>
+
+  <script>
+    // Get code from URL
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get("code")
+    const state = params.get("state")
+
+    if (code) {
+      // Send code to backend to exchange for token
+      fetch(`/api/auth/login?code=${code}&state=${state}`)
+        .then((res) => res.json())
+        .then((data) => {
+          // Store token in localStorage
+          localStorage.setItem("api_token", data.api_token)
+          localStorage.setItem("user", JSON.stringify(data.user))
+          // Redirect to dashboard
+          window.location.href = `/${window.location.pathname.split("/")[1]}/dashboard`
+        })
+        .catch((error) => {
+          console.error("Login failed:", error)
+          window.location.href = `/${window.location.pathname.split("/")[1]}/`
+        })
+    } else {
+      // No code, redirect back to home
+      window.location.href = `/${window.location.pathname.split("/")[1]}/`
+    }
+  </script>
+</Layout>

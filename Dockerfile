@@ -22,6 +22,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=bun-builder /app/dist ./web/dist/
+RUN go generate ./ent
 RUN CGO_ENABLED=0 go build -ldflags '-s -w' -o tmail cmd/main.go
 
 FROM alpine AS runner

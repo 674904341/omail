@@ -36,3 +36,24 @@ func (c *Context) Bad(msg string) error {
 func (c *Context) Badf(f string, args ...any) error {
 	return c.Bad(fmt.Sprintf(f, args...))
 }
+
+// Client returns the database client
+func (c *Context) Client() *ent.Client {
+	return c.ent
+}
+
+// User returns the authenticated user from context
+func (c *Context) User() *ent.User {
+	if user, ok := c.Get("user").(*ent.User); ok {
+		return user
+	}
+	return nil
+}
+
+// APIContext wraps echo.Context with additional context methods
+type APIContext interface {
+	echo.Context
+	Client() *ent.Client
+	User() *ent.User
+	Context() echo.Context
+}

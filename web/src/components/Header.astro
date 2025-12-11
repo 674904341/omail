@@ -1,7 +1,7 @@
 ---
 import { useTranslations, type language } from "@/i18n/ui"
-import ToGithub from "@/components/ToGithub"
 import ThemeIcon from "./ThemeIcon.astro"
+import AuthButton from "@/components/AuthButton"
 
 const { lang } = Astro.props
 const t = useTranslations(lang as language)
@@ -12,7 +12,9 @@ const t = useTranslations(lang as language)
     <img alt="logo" src="/favicon.svg" class="h-6" />
     <span class="mx-1 font-semibold">{t("title")}</span>
     <div class="flex-1"></div>
-    <ThemeIcon />
-    
+    <div class="flex items-center gap-3">
+      <ThemeIcon />
+      <AuthButton lang={lang} client:load />
+    </div>
   </div>
 </header>
